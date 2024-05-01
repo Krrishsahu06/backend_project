@@ -2,14 +2,21 @@
   "name": "backend_project",
   "version": "1.0.0",
   "description": "Complete backend project",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev":"nodemon src/index.js"
   },
   "keywords": [
     "javascript",
     "backend"
   ],
   "author": "krish sahu",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "wsl": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
 }
