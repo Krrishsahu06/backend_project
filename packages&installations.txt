@@ -1,1 +1,2 @@
 we downloaded dotenvv,expresss and mongoose
+and then cookie-parser and cors
