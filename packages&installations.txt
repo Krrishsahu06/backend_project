@@ -1,2 +1,4 @@
 we downloaded dotenvv,expresss and mongoose
 and then cookie-parser and cors
+
+moongoose aggregration package for queries
