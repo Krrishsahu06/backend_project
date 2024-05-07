@@ -11,7 +11,7 @@ cloudinary.config({
 
 
 //NOW WE ARE CREATING A METHOD FOR UPLOADING FILE INTO CLOUDINARY
-const uploadFileCloudinary = async (fileURL)=>{
+const uploadOnCloudinary = async (fileURL)=>{
    try {
     if(!fileURL) return console.log("Did not find the file URL or path");
 
@@ -30,4 +30,4 @@ const uploadFileCloudinary = async (fileURL)=>{
    }
 }
 
-export  {uploadFileCloudinary};
+export  {uploadOnCloudinary};
