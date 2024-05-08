@@ -1,5 +1,5 @@
 import {v2 as cloudinary} from 'cloudinary';
-import { log } from 'console';
+
 import fs from "fs"
 
           
@@ -21,6 +21,7 @@ const uploadOnCloudinary = async (fileURL)=>{
 
     //file has been uplaoded successfullu
     console.log("File is uplaoded on cloudinary", response.url);
+    fs.unlinkSync(fileURL)  //here we are deleting the file from localstorage
     return response
 
    } catch (error) {
