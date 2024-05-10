@@ -1,94 +1,97 @@
-import mongoose , {Schema} from "mongoose";
+import mongoose, {Schema} from "mongoose";
+import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken";
-import { Await } from "react-router-dom";
 
-
-const userSchema = Schema(
+const userSchema = new Schema(
     {
-        username:{
+        username: {
             type: String,
+            required: true,
             unique: true,
-            required: true,
             lowercase: true,
-            trim: true,
-            index:true 
+            trim: true, 
+            index: true
         },
-        email:{
+        email: {
             type: String,
+            required: true,
             unique: true,
-            required: true,
-            lowercase: true,
-            trim: true,
+            lowecase: true,
+            trim: true, 
         },
-        fullName:{
+        fullName: {
             type: String,
             required: true,
-            lowercase: true,
-            trim: true,
-            index:true,
+            trim: true, 
+            index: true
         },
-        avatar:{
-            type:String, //cloudinary url
-            required:true,
+        avatar: {
+            type: String, // cloudinary url
+            required: true,
         },
-        coverImage:{
-            type: String,
-
+        coverImage: {
+            type: String, // cloudinary url
         },
         watchHistory: [
             {
                 type: Schema.Types.ObjectId,
-                ref:"Video"
+                ref: "Video"
             }
         ],
-        password:{
-            type:String,
-            required:[true,'password is required']
-            //Here we used bcrypt library for encryptiying password
+        password: {
+            type: String,
+            required: [true, 'Password is required']
         },
-        refreshToken:{
-            type:String
+        refreshToken: {
+            type: String
         }
-    },{timestamps:true}
+
+    },
+    {
+        timestamps: true
+    }
 )
 
-userSchema.pre("save", async function(next){
-    if(!this.isModified("password")) return next; //here we are checking if password field is modified 
-    this.password= await  bcrypt.hash(this.password,10)
+userSchema.pre("save", async function (next) {
+    if(!this.isModified("password")) return next();
+
+    this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
-userSchema.methods.isPasswordCorrect = async function (password) {
-    return await bcrypt.compare(password,this.password)
+userSchema.methods.isPasswordCorrect = async function(password){
+    return await bcrypt.compare(password, this.password)
 }
 
-userSchema.methods.generateAccessToken = function () {
-   return jwt.sign({
-        _id:this._id,
-        email:this.email,
-        username:this.username,
-        fullName:this.fullName
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-    }
-)
-}
-
-userSchema.methods.generateRefreshToken = function () {
-        return jwt.sign({
-            _id:this._id,
-            email:this.email,
-            username:this.username,
-            fullname:this.fullname
-        },
-        process.env.REFRESH_TOKEN_SECRET,
+userSchema.methods.generateAccessToken = function(){
+    return jwt.sign(
         {
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRY
+            // _id: this._id,
+            // email: this.email,
+            // username: this.username,
+            // fullName: this.fullName
+            id:"SomeId",
+            username:"username",
+        },
+       `${ process.env.ACCESS_TOKEN_SECRET}`,
+        {
+            expiresIn: `${process.env.ACCESS_TOKEN_EXPIRY}`
+        }
+    )
+}
+userSchema.methods.generateRefreshToken = function(){
+    return jwt.sign(
+        {
+            // _id: this._id,
+            id:"SomeId"
+
+            
+        },
+        `${process.env.REFRESH_TOKEN_SECRET}`,
+        {
+            expiresIn: `${process.env.REFRESH_TOKEN_EXPIRY}`
         }
     )
 }
 
-export const User = mongoose.model("User",userSchema)
+export const User = mongoose.model("User", userSchema)
