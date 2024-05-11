@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
+
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -257,61 +258,137 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       },
     },
     { new: true } //this line returns the updated value so we ccan store it into a element
-  ).select("-password");//this line means gget everything from user except password
+  ).select("-password"); //this line means gget everything from user except password
 
   return res
     .status(200)
     .json(new ApiResponse(200), user, "New name and email updated");
 });
 
-const updateUserAvatar = asyncHandler(async(req,res)=>{
-    const avatarLocalPath = req.file?.path
-    if (!avatarLocalPath) {
-        throw new ApiError(400,"No avatar file is found")
-    }
-    const avatar = await  uploadOnCloudinary(avatarLocalPath)
-    if (!avatar.url) {
-        throw new ApiError(400,"Error while uplaoding avatar file on cloudinary")
-    }
-    //Now we will set the avatar 
-    const user = await User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set:{
-                avatar:avatar.url //here we only need tp update the cloudinary url and if we write only avatar it will 
-                //give a complete object
-            }
-        },
-        {new:true}
-    ).select("-password")
-    return res
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "No avatar file is found");
+  }
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  if (!avatar.url) {
+    throw new ApiError(400, "Error while uplaoding avatar file on cloudinary");
+  }
+  //Now we will set the avatar
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url, //here we only need tp update the cloudinary url and if we write only avatar it will
+        //give a complete object
+      },
+    },
+    { new: true }
+  ).select("-password");
+  return res
     .status(200)
-    .json(new ApiError(200,user,"Avatar Image updated successfully"))
-})
-const updateUserCoverImage = asyncHandler(async(req,res)=>{
-    const coverImgLocalPath = req.file?.path
-    if (!coverImgLocalPath.url) {
-        throw new ApiError(400,"No cover image file is found")
-    }
-    const cover = await  uploadOnCloudinary(coverImgLocalPath)
-    if (!cover) {
-        throw new ApiError(400,"Error while uplaoding cover file on cloudinary")
-    }
-    //Now we will set the avatar 
-    const user = await  User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set:{
-                coverImage:cover.url //here we only need tp update the cloudinary url and if we write only avatar it will 
-                //give a complete object
-            }
-        },
-        {new:true}
-    ).select("-password")
-    return res
+    .json(new ApiError(200, user, "Avatar Image updated successfully"));
+});
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImgLocalPath = req.file?.path;
+  if (!coverImgLocalPath.url) {
+    throw new ApiError(400, "No cover image file is found");
+  }
+  const cover = await uploadOnCloudinary(coverImgLocalPath);
+  if (!cover) {
+    throw new ApiError(400, "Error while uplaoding cover file on cloudinary");
+  }
+  //Now we will set the avatar
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: cover.url, //here we only need tp update the cloudinary url and if we write only avatar it will
+        //give a complete object
+      },
+    },
+    { new: true }
+  ).select("-password");
+  return res
     .status(200)
-    .json(new ApiError(200,user,"Cover Image updated successfully"))
-})
+    .json(new ApiError(200, user, "Cover Image updated successfully"));
+});
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username.trim()) {
+    throw new ApiError(400, "User not found");
+  }
+
+  const channel = await User.aggregate([
+    {
+      //these are called pipelines , " {} "
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions", //here as we know a string like "Subscription" become "subscriptions" in database
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        //this method are used to add additional fields into the model
+        subscribersCount: {
+          $size: "$subscribers", //here this size method is used to calculate the number
+          //as subscribers become a field we need to use "$"
+        },
+        channelsSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user._id, "$subscribers.subsriber"] }, //here we first getting the user who is logged in
+            // and then checking if he exists in the subscribers list
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project:
+      {
+        username:1,
+        fullName:1,
+        subscribersCount:1,
+        channelsSubscribedToCount:1,
+        isSubscribed:1,
+        avatar:1,
+        coverImage:1,
+        email:1
+
+      }
+    }
+  ]);
+
+  if (!channel?.length) {
+    throw new ApiError(404,"Channel does not exist")
+  }
+
+  return res
+  .status(200)
+  .json(
+    new ApiResponse(200,channel[0],"User channel fetched successfully")
+  )
+});
 
 export {
   loginUser,
@@ -322,5 +399,6 @@ export {
   changeUserPassword,
   updateAccountDetails,
   updateUserAvatar,
-  updateUserCoverImage
+  updateUserCoverImage,
+  getUserChannelProfile,
 };
