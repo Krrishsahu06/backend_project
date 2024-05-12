@@ -190,13 +190,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-
+    
     const user = await User.findById(decodedToken?._id);
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
+    console.log(incomingRefreshToken);
 
-    if (refreshAccessToken !== user?.refreshToken) {
+    if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is expired or invalid");
     }
 
@@ -222,8 +223,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 const changeUserPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
-  const user = User.findById(req.user?._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  const user = await  User.findById(req.user?._id);
+  // console.log(user);
+  const isPasswordCorrect =await user.isPasswordCorrect(oldPassword);
 
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid old password");
@@ -390,10 +392,10 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
 const getWatchHistory = asyncHandler(async (req, res) => {
   //video number 20 ,5:00 min
-  const user = User.aggregate([
+  const user = await User.aggregate([
     {
       $match: {
-        _id: new mongoose.Types.ObjectId(req.user?._id),
+        _id: new  mongoose.Types.ObjectId(req.user?._id),
       },
     },
     {
