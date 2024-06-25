@@ -39,7 +39,7 @@ router.route("/change-password").post(verifyJWT, changeUserPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("update-account").post(verifyJWT, updateAccountDetails);
 router
-  .route("avatar")
+  .route("/avatar")
   .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router
   .route("/cover-image")

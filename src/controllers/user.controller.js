@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import fs from "fs"
 
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
@@ -87,7 +88,7 @@ const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
   });
 
-  const createdUser = await User.findById(user._id).select(
+  c.select(
     "-password -refreshToken"
   );
 
@@ -246,7 +247,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Current user fetched succcessfully"));
 });
 
-const updateAccountDetails = asyncHandler(async (req, res) => {
+const updateAccountDetails = asyncHandler(async (req, res) => { 
   const { fullName, email } = req.body;
   if (!fullName || !email) {
     throw new ApiError(400, "Both fullname and email are required");
